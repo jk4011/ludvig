@@ -1,0 +1,17 @@
+.vscode
+*.pyc
+*.zip
+splits
+images/
+*.pth
+*.pkl
+train/
+val/
+wandb/
+tmp*
+__pycache__
+dataset
+checkpoints
+logs/*
+.cache/*
+gaussiansplatting/*

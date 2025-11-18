@@ -8,8 +8,8 @@ args = parser.parse_args()
 
 ext = "_rgb" * args.rgb
 cfg = dict(
-    colmap_dir="./dataset/stump/",
-    gs_source="./dataset/stump/gs/point_cloud/iteration_30000/point_cloud.ply",
+    colmap_dir="./dataset/360_v2/stump/",
+    gs_source="./dataset/360_v2/stump/gs/point_cloud/iteration_30000/point_cloud.ply",
     config=f"configs/demo{ext}.yaml",
     height=1060,
     width=1600,

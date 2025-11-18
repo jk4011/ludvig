@@ -3,6 +3,7 @@ import torch
 import numpy as np
 from scipy.spatial import cKDTree
 from tqdm import tqdm
+from jhutil import cache_output
 
 
 def energy_fn(x, bandwidth, mask=None, dim=None):
@@ -99,6 +100,7 @@ def csr_diags(values):
     return matrix
 
 
+@cache_output(func_name="query_neighbors")
 def query_neighbors(points, num_neighbors=10000, k=None, include_self=True):
     """
     Finds the nearest neighbors for each point in a point cloud.

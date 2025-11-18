@@ -10,6 +10,9 @@ from sklearn.decomposition import PCA
 from utils.solver import uplifting
 from utils.config import config_to_instance
 from ludvig_base import LUDVIGBase, reproducibility
+import wandb
+import warnings
+warnings.filterwarnings('ignore')  # category=DeprecationWarning
 
 
 class LUDVIGUplift(LUDVIGBase):
@@ -112,8 +115,20 @@ if __name__ == "__main__":
     parser.add_argument("--height", type=int, default=1199)
     parser.add_argument("--width", type=int, default=1600)
     parser.add_argument("--tag", type=str)  #
+    parser.add_argument("--wandb", action='store_true')
 
     args = parser.parse_args()
+
+    if args.wandb:
+        wandb.init(
+            project="ludvig", # ex) ddgs_llff
+            name=args.tag,
+            # group=args.tag,           # original(DPT)
+            # dir=dir_path,
+            # settings=wandb.Settings(start_method="fork"),
+            )
+        wandb.config.update(args)
+
     reproducibility(0)
     model = LUDVIGUplift(args)
     model.uplift()

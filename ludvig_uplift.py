@@ -44,7 +44,7 @@ class LUDVIGUplift(LUDVIGBase):
             'directory',
             os.path.join(self.colmap_dir, 'images')
         )
-        dataset = config_to_instance(
+        self.dataset = config_to_instance(
             directory=directory,
             gaussian=self.gaussian,
             cameras=self.colmap_cameras,
@@ -54,9 +54,9 @@ class LUDVIGUplift(LUDVIGBase):
             width=self.img_width,
             **self.config.feature,
         )
-        loader = iter(dataset)
+        self.loader = iter(self.dataset)
         features, _ = uplifting(
-            loader,
+            self.loader,
             self.gaussian,
             prune_gaussians=self.config.get("prune_gaussians", None),
         )
@@ -104,8 +104,7 @@ class LUDVIGUplift(LUDVIGBase):
         self.gaussian.save_ply(os.path.join(self.logdir, "gaussians.ply"))
         np.save(os.path.join(self.logdir, "features.npy"), self.features.cpu().numpy())
 
-
-if __name__ == "__main__":
+def parse_args():
     parser = ArgumentParser()
     parser.add_argument("--gs_source", type=str, required=True)
     parser.add_argument("--colmap_dir", type=str, required=True)
@@ -116,16 +115,19 @@ if __name__ == "__main__":
     parser.add_argument("--width", type=int, default=1600)
     parser.add_argument("--tag", type=str)  #
     parser.add_argument("--wandb", action='store_true')
+    parser.add_argument("--wandb_group", type=str)
 
     args = parser.parse_args()
+    return args
 
+if __name__ == "__main__":
+
+    args = parse_args()
     if args.wandb:
         wandb.init(
             project="ludvig", # ex) ddgs_llff
             name=args.tag,
-            # group=args.tag,           # original(DPT)
-            # dir=dir_path,
-            # settings=wandb.Settings(start_method="fork"),
+            group=args.wandb_group,
             )
         wandb.config.update(args)
 

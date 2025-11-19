@@ -15,6 +15,7 @@ from utils.data import fetch_data_info
 from utils.scribble import load_scribbles, scribble_inverse_rendering
 from utils.config import config_to_instance
 from evaluation.base import EvaluationBase
+import wandb
 
 class SegmentationBase(EvaluationBase):
 
@@ -237,6 +238,16 @@ class SegmentationBase(EvaluationBase):
             os.path.join(self.logdir, "masks", "rgb", f"{img_name}_iou{rbest_iou}.jpg"),
             rgb_mask,
         )
+        if wandb.run:
+            wandb_data = {
+                "1.rgb_gt": wandb.Image(rgb_gt * 255),
+                "2.anchor": wandb.Image(anchor),
+                "3.rgb_mask": wandb.Image(rgb_mask * 255),
+                "4.mask_best": wandb.Image(mask_best),
+                "5.mask_diff": wandb.Image(mask_diff),
+                "best_iou": best_iou,
+            }
+            wandb.log(wandb_data)
 
         return best_iou, k_best
 

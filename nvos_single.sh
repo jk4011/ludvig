@@ -1,12 +1,10 @@
 
 i=0
-wandb_group=$1
+wandb_group=tmp
 data_path=/root/data1/jinhyeok/ludvig/dataset/llff_data
 
-gpus=(3 4 5 6 7)
-for data in flower  fortress  horns_center horns_left  orchids  trex leaves fern; do
-# gpus=(2)
-# for data in fern; do
+gpus=(2)
+for data in fern; do
     gpu_id=${gpus[$((i % ${#gpus[@]}))]}
     echo "gpu:$gpu_id data:$data"
     

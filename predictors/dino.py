@@ -7,6 +7,7 @@ from dinov2.model import DINOv2
 from utils.config import config_to_instance
 from utils.image import resize, image_from_path
 from .base import BaseDataset
+from jhutil import cache_output
 
 class DINOv2Dataset(BaseDataset):
     def __init__(
@@ -22,7 +23,8 @@ class DINOv2Dataset(BaseDataset):
         **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self.model = DINOv2(dino_cfg, dino_ckpt).cuda()
+        self.dino_cfg = dino_cfg
+        self.dino_ckpt = dino_ckpt
         self.n_components = n_components
         self.sliding_window = None
         if sliding_window is not None:
@@ -53,12 +55,16 @@ class DINOv2Dataset(BaseDataset):
         ).squeeze(0)
         return feat, self.cameras[idx]
 
-    def extract(self):
+    @cache_output(func_name="dino_extract", override=False)
+    def _extract(self, directory):
         print("Computing PCA...")
         features = None
         n_patch = 1
+        if not hasattr(self, "model"):
+            self.model = DINOv2(self.dino_cfg, self.dino_ckpt).cuda()
+
         for i, cam in enumerate(self.cameras):
-            img = image_from_path(self.directory, cam.image_name, normalize=True)
+            img = image_from_path(directory, cam.image_name, normalize=True)
             H, W = img.shape[1:]
             Hr, Wr = (H // 14) * 14, (W // 14) * 14
             img = nn.functional.interpolate(
@@ -84,13 +90,28 @@ class DINOv2Dataset(BaseDataset):
                 else:
                     features = np.empty((npix*len(self.cameras), D), dtype=np.float32)
             features[i*npix:(i+1)*npix] = _features
-        features = self.apply_pca(features)
+        features, eigvals = self.apply_pca(features)
         split_indices = np.cumsum(npix * np.ones(len(self.cameras)).astype(int))
-        self.features = np.split(features, split_indices[:-1], axis=0)
-        self.n_patch = n_patch
-        self.h, self.w = h, w
-        self.H, self.W = H, W
-        self.Hr, self.Wr = Hr, Wr
+        features = np.split(features, split_indices[:-1], axis=0)
+
+        result = {
+            "features": features,
+            "n_patch": n_patch,
+            "sliding_window": self.sliding_window,
+            "eigvals": eigvals,
+            "h": h,
+            "w": w,
+            "H": H,
+            "W": W,
+            "Hr": Hr,
+            "Wr": Wr,
+        }
+        return result
+
+    def extract(self):
+        result = self._extract(self.directory)
+        self.__dict__.update(result)
+        return self.features
 
     def apply_pca(self, features):
         pca = PCA(n_components=self.n_components)
@@ -109,5 +130,5 @@ class DINOv2Dataset(BaseDataset):
             features -= features.mean(axis=0)
             features /= features.std(axis=0)
             features = pca.fit_transform(features)
-        self.eigvals = torch.from_numpy(pca.singular_values_).cuda()
-        return features
+        eigvals = torch.from_numpy(pca.singular_values_).cuda()
+        return features, eigvals

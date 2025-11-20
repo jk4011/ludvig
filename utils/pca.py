@@ -31,6 +31,7 @@ def save_pca(pca, eval_dir, saturate=False, ext="", sgn_shift=None):
 
 
 def save_pcas(pca, eval_dir, saturate=False, ext="", **kwargs):
+    pca_imgs = []
     for i in [-1, 1]:
         for j in [-1, 1]:
             for k in [-1, 1]:
@@ -56,6 +57,8 @@ def save_pcas(pca, eval_dir, saturate=False, ext="", **kwargs):
                     save_img(
                         os.path.join(eval_dir, f"pca_{l}{ext}.jpg"), _to_save, **kwargs
                     )
+                pca_imgs.append(_to_save)
+    return pca_imgs
 
 
 def pca_on_embeddings(

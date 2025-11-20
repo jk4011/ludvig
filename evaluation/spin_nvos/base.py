@@ -192,7 +192,7 @@ class SegmentationBase(EvaluationBase):
 
         if not self.has_saved and self.features is not None:
             if self.features.shape[-1] > 3:
-                save_pcas(self.render_fn(self.features[:, :3], camera), self.logdir)
+                pca_imgs = save_pcas(self.render_fn(self.features[:, :3], camera), self.logdir)
 
             os.makedirs(os.path.join(self.logdir, "removal"), exist_ok=True)
             for t in .1*np.arange(1,10):
@@ -239,12 +239,15 @@ class SegmentationBase(EvaluationBase):
             rgb_mask,
         )
         if wandb.run:
+            pca_img = pca_imgs[0]
+            pca_scaled = (pca_img - pca_img.min()) / (pca_img.max() - pca_img.min())
             wandb_data = {
-                "1.rgb_gt": wandb.Image(rgb_gt * 255),
-                "2.anchor": wandb.Image(anchor),
-                "3.rgb_mask": wandb.Image(rgb_mask * 255),
-                "4.mask_best": wandb.Image(mask_best),
-                "5.mask_diff": wandb.Image(mask_diff),
+                "1.pca": wandb.Image(pca_scaled[:, ::4, ::4]),
+                "2.rgb_gt": wandb.Image(rgb_gt[:, ::4, ::4] * 255),
+                "3.anchor": wandb.Image(anchor[:, ::4, ::4]),
+                "4.rgb_mask": wandb.Image(rgb_mask * 255),
+                "5.mask_best": wandb.Image(mask_best.resize((400, 300), Image.NEAREST)),
+                "6.mask_diff": wandb.Image(mask_diff[:, ::4, ::4]),
                 "best_iou": best_iou,
             }
             wandb.log(wandb_data)

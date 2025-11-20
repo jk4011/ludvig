@@ -10,7 +10,7 @@ for data in flower  fortress  horns_center horns_left  orchids  trex leaves fern
     gpu_id=${gpus[$((i % ${#gpus[@]}))]}
     echo "gpu:$gpu_id data:$data"
     
-    CUDA_VISIBLE_DEVICES=$gpu_id bash script/seg.sh $data $wandb_group dif_NVOS 2>&1 | tee terminal/$data.log &
+    CUDA_VISIBLE_DEVICES=$gpu_id bash script/seg_vggt.sh $data $wandb_group dif_NVOS 2>&1 | tee terminal/$data.log &
     # CUDA_VISIBLE_DEVICES=$gpu_id bash script/seg.sh $data $wandb_group dif_NVOS
 
     i=$((i + 1))
